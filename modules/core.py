@@ -151,6 +151,10 @@ def release_resources() -> None:
 
 
 def pre_check() -> bool:
+    """
+    Verify that python >= 3.10
+    Verify that ffmpeg is installed
+    """
     if sys.version_info < (3, 9):
         update_status('Python version is not supported - please upgrade to 3.9 or higher.')
         return False
