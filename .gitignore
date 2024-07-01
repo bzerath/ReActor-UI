@@ -19,3 +19,4 @@ temp/
 venv/
 workflow/
 gfpgan/
+/face_reco/

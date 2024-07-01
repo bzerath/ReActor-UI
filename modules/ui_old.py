@@ -5,8 +5,8 @@ from typing import Callable, Tuple
 import cv2
 from PIL import Image, ImageOps
 
-import modules.globals
-import modules.metadata
+import modules.variables.values
+import modules.variables.metadata
 from modules.face_analyser import get_one_face
 from modules.capturer import get_video_frame, get_video_frame_total
 from modules.processors.frame.core import get_frame_processors_modules
@@ -14,7 +14,7 @@ from modules.utilities import is_image, is_video, resolve_relative_path
 
 ROOT = None
 ROOT_HEIGHT = 700
-ROOT_WIDTH = 600
+ROOT_WIDTH = 900
 
 PREVIEW = None
 PREVIEW_MAX_HEIGHT = 700
@@ -27,10 +27,11 @@ RECENT_DIRECTORY_OUTPUT = None
 preview_label = None
 preview_slider = None
 source_label = None
-target_label = None
+subject_label = None
+target_label: ctk.CTkLabel = None
 status_label = None
 
-img_ft, vid_ft = modules.globals.file_types
+img_ft, vid_ft = modules.globals_ui.globals.file_types
 
 
 def init(start: Callable[[], None], destroy: Callable[[], None]) -> ctk.CTk:
@@ -43,7 +44,7 @@ def init(start: Callable[[], None], destroy: Callable[[], None]) -> ctk.CTk:
 
 
 def create_root(start: Callable[[], None], destroy: Callable[[], None]) -> ctk.CTk:
-    global source_label, target_label, status_label
+    global source_label, target_label, subject_label, status_label
 
     ctk.deactivate_automatic_dpi_awareness()
     ctk.set_appearance_mode('system')
@@ -51,45 +52,67 @@ def create_root(start: Callable[[], None], destroy: Callable[[], None]) -> ctk.C
 
     root = ctk.CTk()
     root.minsize(ROOT_WIDTH, ROOT_HEIGHT)
-    root.title(f'{modules.metadata.name} {modules.metadata.version} {modules.metadata.edition}')
+    root.title(f'{modules.variables.metadata.name} {modules.variables.metadata.version} {modules.variables.metadata.edition}')
     root.configure()
     root.protocol('WM_DELETE_WINDOW', lambda: destroy())
 
-    source_label = ctk.CTkLabel(root, text=None)
-    source_label.place(relx=0.1, rely=0.1, relwidth=0.3, relheight=0.25)
+    source_label = ctk.CTkLabel(root, text="")
+    source_label.place(relx=0.10, rely=0.1, relwidth=0.25, relheight=0.25)
 
-    target_label = ctk.CTkLabel(root, text=None)
-    target_label.place(relx=0.6, rely=0.1, relwidth=0.3, relheight=0.25)
+    target_label = ctk.CTkLabel(root, text="")
+    target_label.place(relx=0.40, rely=0.1, relwidth=0.25, relheight=0.25)
+
+    subject_label = ctk.CTkLabel(root, text="")
+    subject_label.place(relx=0.70, rely=0.1, relwidth=0.25, relheight=0.25)
 
     source_button = ctk.CTkButton(root, text='Select a face', cursor='hand2', command=lambda: select_source_path())
-    source_button.place(relx=0.1, rely=0.4, relwidth=0.3, relheight=0.1)
+    source_button.place(relx=0.1, rely=0.4, relwidth=0.25, relheight=0.1)
 
     target_button = ctk.CTkButton(root, text='Select a target', cursor='hand2', command=lambda: select_target_path())
-    target_button.place(relx=0.6, rely=0.4, relwidth=0.3, relheight=0.1)
+    target_button.place(relx=0.40, rely=0.4, relwidth=0.25, relheight=0.1)
 
-    keep_fps_value = ctk.BooleanVar(value=modules.globals.keep_fps)
-    keep_fps_checkbox = ctk.CTkSwitch(root, text='Keep fps', variable=keep_fps_value, cursor='hand2', command=lambda: setattr(modules.globals, 'keep_fps', not modules.globals.keep_fps))
+    subject_button = ctk.CTkButton(root, text='Select a subject', cursor='hand2', command=lambda: select_subject_path())
+    subject_button.place(relx=0.70, rely=0.4, relwidth=0.25, relheight=0.1)
+
+    keep_fps_value = ctk.BooleanVar(value=modules.globals_ui.globals.keep_fps)
+    keep_fps_checkbox = ctk.CTkSwitch(root,
+                                      text='Keep fps',
+                                      variable=keep_fps_value,
+                                      cursor='hand2',
+                                      command=lambda: setattr(modules.globals_ui.globals,
+                                                              'keep_fps',
+                                                              not modules.globals_ui.globals.keep_fps))
     keep_fps_checkbox.place(relx=0.1, rely=0.6)
 
-    keep_frames_value = ctk.BooleanVar(value=modules.globals.keep_frames)
-    keep_frames_switch = ctk.CTkSwitch(root, text='Keep frames', variable=keep_frames_value, cursor='hand2', command=lambda: setattr(modules.globals, 'keep_frames', keep_frames_value.get()))
+    keep_frames_value = ctk.BooleanVar(value=modules.globals_ui.globals.keep_frames)
+    keep_frames_switch = ctk.CTkSwitch(root, text='Keep frames', variable=keep_frames_value, cursor='hand2', command=lambda: setattr(modules.globals_ui.globals, 'keep_frames', keep_frames_value.get()))
     keep_frames_switch.place(relx=0.1, rely=0.65)
 
     # for FRAME PROCESSOR ENHANCER tumbler:
-    enhancer_value = ctk.BooleanVar(value=modules.globals.fp_ui['face_enhancer'])
-    enhancer_switch = ctk.CTkSwitch(root, text='Face Enhancer', variable=enhancer_value, cursor='hand2', command=lambda: update_tumbler('face_enhancer',enhancer_value.get()))
+    enhancer_value = ctk.BooleanVar(value=modules.globals_ui.globals.fp_ui['face_enhancer'])
+    enhancer_switch = ctk.CTkSwitch(root,
+                                    text='Face Enhancer',
+                                    variable=enhancer_value,
+                                    cursor='hand2',
+                                    command=lambda: update_tumbler('face_enhancer',enhancer_value.get()))
     enhancer_switch.place(relx=0.1, rely=0.7)
 
-    keep_audio_value = ctk.BooleanVar(value=modules.globals.keep_audio)
-    keep_audio_switch = ctk.CTkSwitch(root, text='Keep audio', variable=keep_audio_value, cursor='hand2', command=lambda: setattr(modules.globals, 'keep_audio', keep_audio_value.get()))
+    keep_audio_value = ctk.BooleanVar(value=modules.globals_ui.globals.keep_audio)
+    keep_audio_switch = ctk.CTkSwitch(root, text='Keep audio', variable=keep_audio_value, cursor='hand2', command=lambda: setattr(modules.globals_ui.globals, 'keep_audio', keep_audio_value.get()))
     keep_audio_switch.place(relx=0.6, rely=0.6)
 
-    many_faces_value = ctk.BooleanVar(value=modules.globals.many_faces)
-    many_faces_switch = ctk.CTkSwitch(root, text='Many faces', variable=many_faces_value, cursor='hand2', command=lambda: setattr(modules.globals, 'many_faces', many_faces_value.get()))
+    many_faces_value = ctk.BooleanVar(value=modules.globals_ui.globals.many_faces)
+    many_faces_switch = ctk.CTkSwitch(root,
+                                      text='Many faces',
+                                      variable=many_faces_value,
+                                      cursor='hand2',
+                                      command=lambda: setattr(modules.globals_ui.globals,
+                                                              'many_faces',
+                                                              many_faces_value.get()))
     many_faces_switch.place(relx=0.6, rely=0.65)
 
-    nsfw_value = ctk.BooleanVar(value=modules.globals.nsfw)
-    nsfw_switch = ctk.CTkSwitch(root, text='NSFW', variable=nsfw_value, cursor='hand2', command=lambda: setattr(modules.globals, 'nsfw', nsfw_value.get()))
+    nsfw_value = ctk.BooleanVar(value=modules.globals_ui.globals.nsfw)
+    nsfw_switch = ctk.CTkSwitch(root, text='NSFW', variable=nsfw_value, cursor='hand2', command=lambda: setattr(modules.globals_ui.globals, 'nsfw', nsfw_value.get()))
     nsfw_switch.place(relx=0.6, rely=0.7)
 
     start_button = ctk.CTkButton(root, text='Start', cursor='hand2', command=lambda: select_output_path(start))
@@ -136,7 +159,7 @@ def update_status(text: str) -> None:
 
 
 def update_tumbler(var: str, value: bool) -> None:
-    modules.globals.fp_ui[var] = value
+    modules.globals_ui.globals.fp_ui[var] = value
 
 
 def select_source_path() -> None:
@@ -145,47 +168,66 @@ def select_source_path() -> None:
     PREVIEW.withdraw()
     source_path = ctk.filedialog.askopenfilename(title='select an source image', initialdir=RECENT_DIRECTORY_SOURCE, filetypes=[img_ft])
     if is_image(source_path):
-        modules.globals.source_path = source_path
-        RECENT_DIRECTORY_SOURCE = os.path.dirname(modules.globals.source_path)
-        image = render_image_preview(modules.globals.source_path, (200, 200))
+        modules.globals_ui.globals.source_path = source_path
+        RECENT_DIRECTORY_SOURCE = os.path.dirname(modules.globals_ui.globals.source_path)
+        image = render_image_preview(modules.globals_ui.globals.source_path, (200, 200))
         source_label.configure(image=image)
     else:
-        modules.globals.source_path = None
+        modules.globals_ui.globals.source_path = None
         source_label.configure(image=None)
+
+
+def select_subject_path() -> None:
+    global RECENT_DIRECTORY_SOURCE, img_ft, vid_ft
+
+    PREVIEW.withdraw()
+    subject_path = ctk.filedialog.askopenfilename(title='select a subject image',
+                                                  initialdir=RECENT_DIRECTORY_SOURCE,
+                                                  filetypes=[img_ft])
+    if is_image(subject_path):
+        modules.globals_ui.globals.subject_path = subject_path
+        RECENT_DIRECTORY_SOURCE = os.path.dirname(modules.globals_ui.globals.subject_path)
+        image = render_image_preview(modules.globals_ui.globals.subject_path, (200, 200))
+        subject_label.configure(image=image)
+    else:
+        modules.globals_ui.globals.subject_path = None
+        subject_label.configure(image=None)
 
 
 def select_target_path() -> None:
     global RECENT_DIRECTORY_TARGET, img_ft, vid_ft
 
     PREVIEW.withdraw()
-    target_path = ctk.filedialog.askopenfilename(title='select an target image or video', initialdir=RECENT_DIRECTORY_TARGET, filetypes=[img_ft, vid_ft])
+    target_path = ctk.filedialog.askopenfilename(title='select an target image or video',
+                                                 initialdir=RECENT_DIRECTORY_TARGET,
+                                                 filetypes=[vid_ft, img_ft])
     if is_image(target_path):
-        modules.globals.target_path = target_path
-        RECENT_DIRECTORY_TARGET = os.path.dirname(modules.globals.target_path)
-        image = render_image_preview(modules.globals.target_path, (200, 200))
+        modules.globals_ui.globals.target_path = target_path
+        RECENT_DIRECTORY_TARGET = os.path.dirname(modules.globals_ui.globals.target_path)
+        image = render_image_preview(modules.globals_ui.globals.target_path, (200, 200))
         target_label.configure(image=image)
     elif is_video(target_path):
-        modules.globals.target_path = target_path
-        RECENT_DIRECTORY_TARGET = os.path.dirname(modules.globals.target_path)
+        modules.globals_ui.globals.target_path = target_path
+        RECENT_DIRECTORY_TARGET = os.path.dirname(modules.globals_ui.globals.target_path)
         video_frame = render_video_preview(target_path, (200, 200))
         target_label.configure(image=video_frame)
     else:
-        modules.globals.target_path = None
+        modules.globals_ui.globals.target_path = None
         target_label.configure(image=None)
 
 
 def select_output_path(start: Callable[[], None]) -> None:
     global RECENT_DIRECTORY_OUTPUT, img_ft, vid_ft
 
-    if is_image(modules.globals.target_path):
+    if is_image(modules.globals_ui.globals.target_path):
         output_path = ctk.filedialog.asksaveasfilename(title='save image output file', filetypes=[img_ft], defaultextension='.png', initialfile='output.png', initialdir=RECENT_DIRECTORY_OUTPUT)
-    elif is_video(modules.globals.target_path):
+    elif is_video(modules.globals_ui.globals.target_path):
         output_path = ctk.filedialog.asksaveasfilename(title='save video output file', filetypes=[vid_ft], defaultextension='.mp4', initialfile='output.mp4', initialdir=RECENT_DIRECTORY_OUTPUT)
     else:
         output_path = None
     if output_path:
-        modules.globals.output_path = output_path
-        RECENT_DIRECTORY_OUTPUT = os.path.dirname(modules.globals.output_path)
+        modules.globals_ui.globals.output_path = output_path
+        RECENT_DIRECTORY_OUTPUT = os.path.dirname(modules.globals_ui.globals.output_path)
         start()
 
 
@@ -213,32 +255,32 @@ def render_video_preview(video_path: str, size: Tuple[int, int], frame_number: i
 def toggle_preview() -> None:
     if PREVIEW.state() == 'normal':
         PREVIEW.withdraw()
-    elif modules.globals.source_path and modules.globals.target_path:
+    elif modules.globals_ui.globals.source_path and modules.globals_ui.globals.target_path:
         init_preview()
         update_preview()
         PREVIEW.deiconify()
 
 
 def init_preview() -> None:
-    if is_image(modules.globals.target_path):
+    if is_image(modules.globals_ui.globals.target_path):
         preview_slider.pack_forget()
-    if is_video(modules.globals.target_path):
-        video_frame_total = get_video_frame_total(modules.globals.target_path)
+    if is_video(modules.globals_ui.globals.target_path):
+        video_frame_total = get_video_frame_total(modules.globals_ui.globals.target_path)
         preview_slider.configure(to=video_frame_total)
         preview_slider.pack(fill='x')
         preview_slider.set(0)
 
 
 def update_preview(frame_number: int = 0) -> None:
-    if modules.globals.source_path and modules.globals.target_path:
-        temp_frame = get_video_frame(modules.globals.target_path, frame_number)
-        if modules.globals.nsfw == False:
+    if modules.globals_ui.globals.source_path and modules.globals_ui.globals.target_path:
+        temp_frame = get_video_frame(modules.globals_ui.globals.target_path, frame_number)
+        if modules.globals_ui.globals.nsfw == False:
             from modules.predicter import predict_frame
             if predict_frame(temp_frame):
                 quit()
-        for frame_processor in get_frame_processors_modules(modules.globals.frame_processors):
+        for frame_processor in get_frame_processors_modules(modules.globals_ui.globals.frame_processors):
             temp_frame = frame_processor.process_frame(
-                get_one_face(cv2.imread(modules.globals.source_path)),
+                get_one_face(cv2.imread(modules.globals_ui.globals.source_path)),
                 temp_frame
             )
         image = Image.fromarray(cv2.cvtColor(temp_frame, cv2.COLOR_BGR2RGB))
