@@ -91,3 +91,24 @@ def process_video(source_path: str,
                             process_frames,
                             subject_path,
                             progress)
+
+
+def debug_video(source_path: str,
+                temp_frame_paths: list[str],
+                debug_frames: Callable[[str, List[str], str, Any], None],
+                subject_path: str) -> None:
+    progress_bar_format = '{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]'
+    total = len(temp_frame_paths)
+    with tqdm(total=total,
+              desc='Processing',
+              unit='frame',
+              dynamic_ncols=True,
+              bar_format=progress_bar_format) as progress:
+        progress.set_postfix({'execution_providers': modules.variables.values.execution_providers,
+                              'execution_threads': modules.variables.values.execution_threads,
+                              'max_memory': modules.variables.values.max_memory})
+        multi_process_frame(source_path,
+                            temp_frame_paths,
+                            debug_frames,
+                            subject_path,
+                            progress)

@@ -232,6 +232,60 @@ def start() -> None:
         update_status('Processing to video failed!')
 
 
+def debug() -> None:
+    for frame_processor in get_frame_processors_modules(modules.variables.values.frame_processors):
+        if not frame_processor.pre_start():
+            return
+    # process image to image
+    if has_image_extension(modules.variables.values.target_path):
+        shutil.copy2(modules.variables.values.target_path, modules.variables.values.output_path)
+        for frame_processor in get_frame_processors_modules(modules.variables.values.frame_processors):
+            update_status('Progressing...', frame_processor.NAME)
+            frame_processor.debug_image(modules.variables.values.source_path,
+                                        modules.variables.values.output_path,
+                                        modules.variables.values.subject_path,
+                                        modules.variables.values.output_path)
+            release_resources()
+        if is_image(modules.variables.values.target_path):
+            update_status('Processing to image succeed!')
+        else:
+            update_status('Processing to image failed!')
+        return
+    # process image to videos
+    update_status('Creating temp resources...')
+    create_temp(modules.variables.values.target_path)
+    update_status('Extracting frames...')
+    extract_frames(modules.variables.values.target_path)
+    temp_frame_paths = get_temp_frame_paths(modules.variables.values.target_path)
+    for frame_processor in get_frame_processors_modules(modules.variables.values.frame_processors):
+        update_status('Progressing... source_path={}'.format(modules.variables.values.source_path),
+                      frame_processor.NAME)
+        frame_processor.debug_video(source_path=modules.variables.values.source_path,
+                                      temp_frame_paths=temp_frame_paths,
+                                      subject_path=modules.variables.values.subject_path)
+        release_resources()
+    # handles fps
+    update_status('Detecting fps...')
+    fps = detect_fps(modules.variables.values.target_path)
+    update_status(f'Creating video with {fps} fps...')
+    create_video(modules.variables.values.target_path, fps)
+    # handle audio
+    if modules.variables.values.keep_audio:
+        if modules.variables.values.keep_fps:
+            update_status('Restoring audio...')
+        else:
+            update_status('Restoring audio might cause issues as fps are not kept...')
+        restore_audio(modules.variables.values.target_path, modules.variables.values.output_path)
+    else:
+        move_temp(modules.variables.values.target_path, modules.variables.values.output_path)
+    # clean and validate
+    clean_temp(modules.variables.values.target_path)
+    if is_video(modules.variables.values.target_path):
+        update_status('Processing to video succeed!')
+    else:
+        update_status('Processing to video failed!')
+
+
 def destroy() -> None:
     if modules.variables.values.target_path:
         clean_temp(modules.variables.values.target_path)
@@ -251,5 +305,5 @@ def run() -> None:
     if modules.variables.values.headless:
         start()
     else:
-        window = ui.App(start=start)  # ui.init(start, destroy)
+        window = ui.App(start=start, debug=debug)  # ui.init(start, destroy)
         window.mainloop()

@@ -5,9 +5,8 @@ import gfpgan
 
 import modules.variables.values
 import modules.processors.frame.core
-from modules.core import update_status
 from modules.face_analyser import get_one_face, get_face_analyser, extract_best_one_face, extract_all_faces
-from modules.typing import Frame
+from modules.variables.typing import Frame
 from modules.utilities import conditional_download, resolve_relative_path, is_image, is_video
 
 FACE_ENHANCER = None

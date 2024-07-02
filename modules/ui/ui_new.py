@@ -1,19 +1,18 @@
-import tkinter
-import tkinter.messagebox
-import webbrowser
-
-import cv2
-from PIL import Image, ImageOps
 import os
+import webbrowser
 from typing import Tuple, Callable
 
 import customtkinter as ctk
+import cv2
+from PIL import Image, ImageOps
+from idlelib.tooltip import Hovertip
+
+import modules.capturer
+import modules.core
+import modules.face_analyser
+import modules.utilities
 import modules.variables.metadata as metadata
 import modules.variables.values as values
-import modules.utilities
-import modules.core
-import modules.capturer
-import modules.face_analyser
 
 ctk.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -35,7 +34,7 @@ class App(ctk.CTk):
     col02_x = 0.375
     col03_x = 0.6875
 
-    def __init__(self, start: Callable[[], None]):
+    def __init__(self, start: Callable[[], None], debug: Callable[[], None]):
         super().__init__()
         ctk.deactivate_automatic_dpi_awareness()
         ctk.set_appearance_mode('system')
@@ -45,53 +44,85 @@ class App(ctk.CTk):
         self.configure()
         self.protocol('WM_DELETE_WINDOW', lambda: modules.core.destroy())
 
-        self.source_label = ctk.CTkLabel(self,
+        self.target_label = ctk.CTkLabel(self,
                                          text="")
-        self.source_label.place(relx=self.col01_x,
+        self.target_label.place(relx=self.col01_x,
                                 rely=0.05,
                                 relwidth=0.25,
                                 relheight=0.25)
 
-        self.target_label = ctk.CTkLabel(self,
-                                         text="")
-        self.target_label.place(relx=self.col02_x,
-                                rely=0.05,
-                                relwidth=0.25,
-                                relheight=0.25)
+        arrow_label = ctk.CTkLabel(self, text="|", anchor="w")
+        arrow_label.place(relx=0.33,
+                          rely=0.10,
+                          relwidth=0.05,
+                          relheight=0.05)
+        arrow_label = ctk.CTkLabel(self, text="|", anchor="w")
+        arrow_label.place(relx=0.33,
+                          rely=0.15,
+                          relwidth=0.05,
+                          relheight=0.05)
+        arrow_label = ctk.CTkLabel(self, text="|", anchor="w")
+        arrow_label.place(relx=0.33,
+                          rely=0.20,
+                          relwidth=0.05,
+                          relheight=0.05)
 
         self.subject_label = ctk.CTkLabel(self,
                                           text="")
-        self.subject_label.place(relx=self.col03_x,
+        self.subject_label.place(relx=self.col02_x,
                                  rely=0.05,
                                  relwidth=0.25,
                                  relheight=0.25)
 
-        self.source_button = ctk.CTkButton(self,
-                                           text='Select a face',
-                                           cursor='hand2',
-                                           command=lambda: self.select_source_path())
-        self.source_button.place(relx=self.col01_x,
-                                 rely=0.31,
-                                 relwidth=0.25,
-                                 relheight=0.1)
+        arrow_label = ctk.CTkLabel(self, text="➡", anchor="w")
+        arrow_label.place(relx=0.65,
+                          rely=0.10,
+                          relwidth=0.05,
+                          relheight=0.05)
+        arrow_label = ctk.CTkLabel(self, text="➡", anchor="w")
+        arrow_label.place(relx=0.65,
+                          rely=0.15,
+                          relwidth=0.05,
+                          relheight=0.05)
+        arrow_label = ctk.CTkLabel(self, text="➡", anchor="w")
+        arrow_label.place(relx=0.65,
+                          rely=0.20,
+                          relwidth=0.05,
+                          relheight=0.05)
+
+        self.source_label = ctk.CTkLabel(self,
+                                         text="")
+        self.source_label.place(relx=self.col03_x,
+                                rely=0.05,
+                                relwidth=0.25,
+                                relheight=0.25)
 
         self.target_button = ctk.CTkButton(self,
-                                           text='Select a target',
+                                           text='Select the media to faceswap',
                                            cursor='hand2',
                                            command=lambda: self.select_target_path())
-        self.target_button.place(relx=self.col02_x,
+        self.target_button.place(relx=self.col01_x,
                                  rely=0.31,
                                  relwidth=0.25,
                                  relheight=0.1)
 
         self.subject_button = ctk.CTkButton(self,
-                                            text='Select a subject',
+                                            text='Select the face to change',
                                             cursor='hand2',
                                             command=lambda: self.select_subject_path())
-        self.subject_button.place(relx=self.col03_x,
+        self.subject_button.place(relx=self.col02_x,
                                   rely=0.31,
                                   relwidth=0.25,
                                   relheight=0.1)
+
+        self.source_button = ctk.CTkButton(self,
+                                           text='Select the face to add',
+                                           cursor='hand2',
+                                           command=lambda: self.select_source_path())
+        self.source_button.place(relx=self.col03_x,
+                                 rely=0.31,
+                                 relwidth=0.25,
+                                 relheight=0.1)
 
         self.keep_frames_value = ctk.BooleanVar(value=values.keep_frames)
         self.keep_frames_switch = ctk.CTkSwitch(self,
@@ -103,6 +134,9 @@ class App(ctk.CTk):
                                       rely=0.45,
                                       relwidth=0.25,
                                       relheight=0.05)
+        keep_frames_tip = Hovertip(self.keep_frames_switch,
+                                   """Keep or delete the frames, for debugging purposes.""",
+                                   hover_delay=500)
 
         self.faces_label = ctk.CTkLabel(self, text="Faces swap:", anchor="w")
         self.faces_label.place(relx=self.col02_x, rely=0.41, relwidth=0.25, relheight=0.05)
@@ -113,6 +147,16 @@ class App(ctk.CTk):
                                           variable=self.faces_value)
         self.faces_value.set(values.face_option)
         self.faces_cbox.place(relx=self.col02_x, rely=0.46, relwidth=0.25, relheight=0.05)
+        faces_label_tip = Hovertip(self.faces_label,
+                                   """Faceswap options:
+        Best one: faceswap only the face under the minimum score.
+        All: faceswap all found faces.""",
+                                   hover_delay=500)
+        faces_cbox_tip = Hovertip(self.faces_cbox,
+                                  """Faceswap options:
+        Best one: faceswap only the face under the minimum score.
+        All: faceswap all found faces.""",
+                                  hover_delay=500)
 
         self.enhancer_label = ctk.CTkLabel(self, text="Enhancer mode:", anchor="w")
         self.enhancer_label.place(relx=self.col03_x, rely=0.41, relwidth=0.25, relheight=0.05)
@@ -123,6 +167,20 @@ class App(ctk.CTk):
                                              variable=self.enhancer_value)
         self.enhancer_value.set(values.enhancer_option)
         self.enhancer_cbox.place(relx=self.col03_x, rely=0.46, relwidth=0.25, relheight=0.05)
+        enhancer_label_tip = Hovertip(self.enhancer_label,
+                                      """Enhancer options:
+        None: No face enhancer.
+        Best face only: Enhance only the face under the minimum score. May miss some frames and leave little artefacts. Can be long.
+        Faces only: Enhance only the faces. May leave little artefacts. Can be very long.
+        All: Analyze all frame. Very very long !""",
+                                      hover_delay=500)
+        enhancer_cbox_tip = Hovertip(self.enhancer_cbox,
+                                     """Enhancer options:
+        None: No face enhancer.
+        Best face only: Enhance only the face under the minimum score. May miss some frames and leave little artefacts. Can be long.
+        Faces only: Enhance only the faces. May leave little artefacts. Can be very long.
+        All: Analyze all frame. Very very long !""",
+                                     hover_delay=500)
 
         nsfw_value = ctk.BooleanVar(value=values.nsfw)
         nsfw_switch = ctk.CTkSwitch(self,
@@ -135,19 +193,44 @@ class App(ctk.CTk):
         self.distance_value = ctk.IntVar(value=values.distance_score)
         self.distance_label = ctk.CTkLabel(self, text="Minimum score limit :", anchor="w")
         self.distance_label.place(relx=self.col02_x, rely=0.51, relwidth=0.25, relheight=0.05)
-        self.distance = ctk.CTkSlider(self, from_=0, to=50, number_of_steps=50, command=self.slider_callback, variable=self.distance_value)
+        self.distance = ctk.CTkSlider(self, from_=0, to=40, number_of_steps=40, command=self.slider_callback, variable=self.distance_value)
         self.distance.place(relx=self.col02_x, rely=0.56, relwidth=0.50, relheight=0.03)
         self.distance_score = ctk.CTkLabel(self, text=str(self.distance_value.get()), anchor="w")
         self.distance_score.place(relx=self.col02_x+0.25, rely=0.51, relwidth=0.05, relheight=0.05)
+        distance_label_tip = Hovertip(self.distance_label,
+                                      """Distance score. Lower is selective, higher is generous.
+        10-15: Near from perfection, possible for a photo.
+        15-20: Can be realistic in a short video
+        20-25: Realistic for videos
+        25-30: Low quality videos
+        35-40: You should faceswap "All", or use another "face to change" file.""",
+                                      hover_delay=500)
+        distance_tip = Hovertip(self.distance,
+                                """Distance score. Lower is selective, higher is generous.
+        10-15: Near from perfection, possible for a photo.
+        15-20: Can be realistic in a short video
+        20-25: Realistic for videos
+        25-30: Low quality videos
+        35-40: You should faceswap "All", or use another "face to change" file.""",
+                                hover_delay=500)
 
         self.start_button = ctk.CTkButton(self, text='< Start >', cursor='hand2', command=lambda: self.select_output_path_and_start(start))
         self.start_button.place(relx=self.col01_x, rely=0.64, relwidth=0.875, relheight=0.09)
+        start_button_tip = Hovertip(self.start_button,
+                                    """Select output path and start faceswap.""",
+                                    hover_delay=500)
 
         self.preview_button = ctk.CTkButton(self, text='( Preview )', cursor='hand2', command=lambda: self.toggle_preview())
         self.preview_button.place(relx=self.col01_x, rely=0.74, relwidth=0.875, relheight=0.08)
+        preview_button_tip = Hovertip(self.preview_button,
+                                      """See results on some frames. Useful for videos, or to test enhance options.""",
+                                      hover_delay=500)
 
-        self.debug_button = ctk.CTkButton(self, text='[ Debug ]', cursor='hand2')#, command=lambda: toggle_preview())
+        self.debug_button = ctk.CTkButton(self, text='[ Debug matching scores ]', cursor='hand2', command=lambda: self.select_output_path_and_debug(debug))
         self.debug_button.place(relx=self.col01_x, rely=0.83, relwidth=0.875, relheight=0.07)
+        debug_button_tip = Hovertip(self.debug_button,
+                                    """Generate photo/video with information about matching scores.""",
+                                    hover_delay=500)
 
         self.status_label = ctk.CTkLabel(self, text=None, justify='center')
         self.status_label.place(relx=self.col01_x, rely=0.9, relwidth=0.875, relheight=0.05)
@@ -247,6 +330,29 @@ class App(ctk.CTk):
             self.RECENT_DIRECTORY_OUTPUT = os.path.dirname(values.output_path)
             print(self.infos())
             start()
+
+    def select_output_path_and_debug(self, debug: Callable[[], None]) -> None:
+        if modules.utilities.is_image(values.target_path):
+            output_path = ctk.filedialog.asksaveasfilename(title='save image output file',
+                                                           filetypes=[self.file_types[0]],
+                                                           defaultextension='.png',
+                                                           initialfile=os.path.splitext(os.path.basename(values.target_path))[0]+"_debug.png"
+                                                           if values.target_path else 'debug.png',
+                                                           initialdir=self.RECENT_DIRECTORY_OUTPUT)
+        elif modules.utilities.is_video(values.target_path):
+            output_path = ctk.filedialog.asksaveasfilename(title='save video output file',
+                                                           filetypes=[self.file_types[1]],
+                                                           defaultextension='.mp4',
+                                                           initialfile=os.path.splitext(os.path.basename(values.target_path))[0]+"_debug.mp4"
+                                                           if values.target_path else 'debug.mp4',
+                                                           initialdir=self.RECENT_DIRECTORY_OUTPUT)
+        else:
+            output_path = None
+        if output_path:
+            values.output_path = output_path
+            self.RECENT_DIRECTORY_OUTPUT = os.path.dirname(values.output_path)
+            print(self.infos())
+            debug()
 
     def create_preview(self) -> ctk.CTkToplevel:
         preview = ctk.CTkToplevel(self)

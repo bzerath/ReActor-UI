@@ -1,13 +1,14 @@
 from typing import Any, List
 import cv2
 import insightface
+import numpy
 import threading
 
 import modules.variables.values
 import modules.processors.frame.core
 from modules.core import update_status
-from modules.face_analyser import get_one_face, get_many_faces, get_best_one_face, get_face_analyser
-from modules.typing import Face, Frame
+from modules.face_analyser import get_one_face, get_many_faces, get_best_one_face, get_face_analyser, extract_all_faces
+from modules.variables.typing import Face, Frame
 from modules.utilities import conditional_download, resolve_relative_path, is_image, is_video
 
 FACE_SWAPPER = None
@@ -59,12 +60,27 @@ def process_frame(source_face: Face, temp_frame: Frame, subject_embedding: Face)
         if many_faces:
             for target_face in many_faces:
                 temp_frame = swap_face(source_face, target_face, temp_frame)
-    else:
+    elif modules.variables.values.face_option == modules.variables.values.faces_best_one:
         target_face = get_best_one_face(temp_frame, subject_embedding)
         if target_face:
             temp_frame = swap_face(source_face, target_face, temp_frame)
+    else:
+        pass
     return temp_frame
 
+
+def debug_frame(source_frame: Face, temp_frame: Frame, subject_embedding: Face) -> Frame:
+    faces_from_frame = get_face_analyser().get(temp_frame)
+    for face in faces_from_frame:
+        match_score = numpy.linalg.norm(subject_embedding - face.embedding)
+        bbox = face.bbox[:4].astype(int)
+        cv2.rectangle(temp_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
+        text = f'Score: {match_score:.2f}'
+        cv2.putText(temp_frame,
+                    text,
+                    (max(bbox[0], 0), max(bbox[1] - 10, 20)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+    return temp_frame
 
 def process_frames(source_path: str,
                    temp_frame_paths: List[str],
@@ -90,6 +106,30 @@ def process_frames(source_path: str,
             progress.update(1)
 
 
+def debug_frames(source_path: str,
+                 temp_frame_paths: List[str],
+                 subject_path: str,
+                 progress: Any = None) -> None:
+    source_face = get_one_face(cv2.imread(source_path))
+
+    subject_face = get_one_face(cv2.imread(subject_path))
+    if subject_face:
+        subject_embedding = subject_face.embedding
+    else:
+        raise Exception("Subject face does not contain face...")
+
+    for temp_frame_path in temp_frame_paths:
+        temp_frame = cv2.imread(temp_frame_path)
+        try:
+            result = debug_frame(source_face, temp_frame, subject_embedding)
+            cv2.imwrite(temp_frame_path, result)
+        except Exception as exception:
+            print(exception)
+            pass
+        if progress:
+            progress.update(1)
+
+
 def process_image(source_path: str, target_path: str, subject_path: str, output_path: str) -> None:
     source_face = get_one_face(cv2.imread(source_path))
     target_frame = cv2.imread(target_path)
@@ -102,5 +142,21 @@ def process_image(source_path: str, target_path: str, subject_path: str, output_
     cv2.imwrite(output_path, result)
 
 
+def debug_image(source_path: str, target_path: str, subject_path: str, output_path: str) -> None:
+    source_face = get_one_face(cv2.imread(source_path))
+    target_frame = cv2.imread(target_path)
+    subject_face = get_face_analyser().get(cv2.imread(subject_path))
+    if subject_face:
+        subject_embedding = subject_face[0].embedding
+    else:
+        raise Exception("Subject face does not contain face...")
+    result = debug_frame(source_face, target_frame, subject_embedding)
+    cv2.imwrite(output_path, result)
+
+
 def process_video(source_path: str, temp_frame_paths: List[str], subject_path: str) -> None:
     modules.processors.frame.core.process_video(source_path, temp_frame_paths, process_frames, subject_path)
+
+
+def debug_video(source_path: str, temp_frame_paths: List[str], subject_path: str) -> None:
+    modules.processors.frame.core.debug_video(source_path, temp_frame_paths, debug_frames, subject_path)
