@@ -1,6 +1,7 @@
 from typing import Any, List
 import cv2
 import insightface
+from insightface.model_zoo.inswapper import INSwapper
 import numpy
 import threading
 
@@ -35,7 +36,7 @@ def pre_start() -> bool:
     return True
 
 
-def get_face_swapper() -> Any:
+def get_face_swapper() -> INSwapper:
     global FACE_SWAPPER
 
     with THREAD_LOCK:
@@ -47,6 +48,7 @@ def get_face_swapper() -> Any:
 
 def swap_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame:
     return get_face_swapper().get(temp_frame, target_face, source_face, paste_back=True)
+
 
 def process_frame(source_face: Face, temp_frame: Frame, subject_embedding: Face) -> Frame:
     """

@@ -1,4 +1,19 @@
-# ReActor 1.0.3 Portable
+# ReActor 1.1.0 Portable
+
+# TODO
+* Refacto core.py, usine à gaz
+* Refacto ce readme 
+* Permettre de reprendre un travail en cours
+  * step 1 : cases à cocher pour choisir quelles étapes sont à faire
+  * step 2 : récupération d'un dossier/travail déjà existant
+* Donner une liste de photos ou vidéos à traiter
+  * step 1 : pour chaque média, utiliser la même "face to change" et la même "face to add"
+  * step 2 : pour chaque média, utiliser des "face to change" et "face to add" spécifiques
+* Traiter plusieurs personnes en même temps
+  * avoir une liste de visages à traiter
+    * step 1 : liste fixe de 3 personnes max
+    * step 2 : liste de longueur indéfinie
+
 ### The Fast and Simple "roop-based*" FaceSwap application with a lot of improvements and with no forced NSFW** filter (uncensored, use it on your own responsibility)
 
 > *[original roop](https://github.com/s0md3v/roop) is discontinued<br>

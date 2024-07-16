@@ -6,7 +6,7 @@ WORKFLOW_DIR = os.path.join(ROOT_DIR, 'workflow')
 
 file_types = [
     ('Image', ('*.png','*.jpg','*.jpeg','*.gif','*.bmp')),
-    ('Video', ('*.mp4','*.mkv'))
+    ('Video', ('*.mp4','*.mkv','*.webm','*.avi','*.wmv')),
 ]
 
 enhancer_none = "None"

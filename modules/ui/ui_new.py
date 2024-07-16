@@ -26,10 +26,7 @@ class App(ctk.CTk):
     RECENT_DIRECTORY_SOURCE = None
     RECENT_DIRECTORY_TARGET = None
     RECENT_DIRECTORY_OUTPUT = None
-    file_types = [
-        ('Image', ('*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp')),
-        ('Video', ('*.mp4', '*.mkv'))
-    ]
+    file_types = values.file_types
     col01_x = 0.0625
     col02_x = 0.375
     col03_x = 0.6875
