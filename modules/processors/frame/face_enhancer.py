@@ -42,30 +42,39 @@ def get_face_enhancer() -> Any:
 def enhance_face(temp_frame: Frame, ref_embedding: Frame) -> Frame:
     if modules.variables.values.enhancer_option == modules.variables.values.enhancer_faces_only:
         for (top, left, bottom, right), face in extract_all_faces(temp_frame):
-            with THREAD_SEMAPHORE:
-                _, _, face = get_face_enhancer().enhance(
-                    face,
-                    paste_back=True
-                )
-            face = cv2.resize(face, (right - left, bottom - top))
-            temp_frame[top:bottom, left:right] = face
+            try:
+                with THREAD_SEMAPHORE:
+                    _, _, face = get_face_enhancer().enhance(
+                        face,
+                        paste_back=True
+                    )
+                face = cv2.resize(face, (right - left, bottom - top))
+                temp_frame[top:bottom, left:right] = face
+            except Exception as e:
+                pass
     elif modules.variables.values.enhancer_option == modules.variables.values.enhancer_best_face_only:
         face = extract_best_one_face(temp_frame, ref_embedding)
         if face:
             top, left, bottom, right, face_frame = extract_best_one_face(temp_frame, ref_embedding)
+            try:
+                with THREAD_SEMAPHORE:
+                    _, _, face_frame = get_face_enhancer().enhance(
+                        face_frame,
+                        paste_back=True
+                    )
+                face_frame = cv2.resize(face_frame, (right - left, bottom - top))
+                temp_frame[top:bottom, left:right] = face_frame
+            except Exception as e:
+                pass
+    elif modules.variables.values.enhancer_option == modules.variables.values.enhancer_all:
+        try:
             with THREAD_SEMAPHORE:
-                _, _, face_frame = get_face_enhancer().enhance(
-                    face_frame,
+                _, _, temp_frame = get_face_enhancer().enhance(
+                    temp_frame,
                     paste_back=True
                 )
-            face_frame = cv2.resize(face_frame, (right - left, bottom - top))
-            temp_frame[top:bottom, left:right] = face_frame
-    elif modules.variables.values.enhancer_option == modules.variables.values.enhancer_all:
-        with THREAD_SEMAPHORE:
-            _, _, temp_frame = get_face_enhancer().enhance(
-                temp_frame,
-                paste_back=True
-            )
+        except Exception as e:
+            pass
     else:
         pass
 
