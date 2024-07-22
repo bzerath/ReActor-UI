@@ -18,7 +18,7 @@ enhancer_option: str = enhancer_none
 
 faces_best_one = "Best one"
 faces_all = "All"
-faces_options = [faces_best_one, faces_all]
+faces_options = [faces_best_one, faces_all, "None"]
 face_option: str = faces_best_one
 
 source_path = None
