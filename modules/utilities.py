@@ -63,7 +63,7 @@ def extract_frames(target_path: str) -> None:
     run_ffmpeg(['-i', target_path, '-pix_fmt', 'rgb24', os.path.join(temp_directory_path, '%04d.png')])
 
 
-def create_video(target_path: str, fps: float = 30.0) -> None:
+def create_unsound_video(target_path: str, fps: float) -> None:
     temp_output_path = get_temp_output_path(target_path)
     temp_directory_path = get_temp_directory_path(target_path)
     run_ffmpeg(['-r', str(fps), '-i', os.path.join(temp_directory_path, '%04d.png'), '-c:v', modules.variables.values.video_encoder, '-crf', str(modules.variables.values.video_quality), '-pix_fmt', 'yuv420p', '-vf', 'colorspace=bt709:iall=bt601-6-625:fast=1', '-y', temp_output_path])
@@ -74,6 +74,12 @@ def restore_audio(target_path: str, output_path: str) -> None:
     done = run_ffmpeg(['-i', temp_output_path, '-i', target_path, '-c:v', 'copy', '-map', '0:v:0', '-map', '1:a:0', '-y', output_path])
     if not done:
         move_temp(target_path, output_path)
+
+
+def create_video(target_path: str, output_path: str) -> None:
+    fps = detect_fps(modules.variables.values.target_path)
+    create_unsound_video(target_path, fps)
+    restore_audio(target_path, output_path)
 
 
 def get_temp_frame_paths(target_path: str) -> List[str]:
@@ -124,7 +130,7 @@ def clean_temp(target_path: str) -> None:
 
 
 def has_image_extension(image_path: str) -> bool:
-    return image_path.lower().endswith(('png', 'jpg', 'jpeg'))
+    return image_path.lower().endswith(modules.variables.values.images_extensions)
 
 
 def is_image(image_path: str) -> bool:

@@ -187,10 +187,10 @@ class App(ctk.CTk):
                                     command=lambda: setattr(values, 'nsfw', nsfw_value.get()))
         nsfw_switch.place(relx=self.col01_x, rely=0.52, relwidth=0.25, relheight=0.05)
 
-        self.distance_value = ctk.IntVar(value=values.distance_score)
+        self.distance_value = ctk.DoubleVar(value=values.distance_score)
         self.distance_label = ctk.CTkLabel(self, text="Minimum score limit :", anchor="w")
         self.distance_label.place(relx=self.col02_x, rely=0.51, relwidth=0.25, relheight=0.05)
-        self.distance = ctk.CTkSlider(self, from_=0, to=40, number_of_steps=40, command=self.slider_callback, variable=self.distance_value)
+        self.distance = ctk.CTkSlider(self, from_=0, to=40, number_of_steps=80, command=self.slider_callback, variable=self.distance_value)
         self.distance.place(relx=self.col02_x, rely=0.56, relwidth=0.50, relheight=0.03)
         self.distance_score = ctk.CTkLabel(self, text=str(self.distance_value.get()), anchor="w")
         self.distance_score.place(relx=self.col02_x+0.25, rely=0.51, relwidth=0.05, relheight=0.05)
@@ -241,6 +241,10 @@ class App(ctk.CTk):
 
     def faces_callback(self, choice):
         values.face_option = self.faces_value.get()
+        if values.face_option != values.faces_none:
+            values.fp_ui['face_swapper'] = True
+        else:
+            values.fp_ui['face_swapper'] = False
 
     def enhancer_callback(self, choice):
         values.enhancer_option = self.enhancer_value.get()
@@ -251,7 +255,7 @@ class App(ctk.CTk):
 
     def slider_callback(self, _):
         self.distance_score.configure(text=str(self.distance_value.get()))
-        values.distance_score = int(self.distance_value.get())
+        values.distance_score = float(self.distance_value.get())
 
     def select_source_path(self) -> None:
         source_path = ctk.filedialog.askopenfilename(title='select an source image',

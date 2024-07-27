@@ -1,18 +1,21 @@
 # ReActor 1.1.0 Portable
 
 ## TODO
-* Refacto core.py, usine à gaz
-* Refacto ce readme 
-* Permettre de reprendre un travail en cours
-  * step 1 : cases à cocher pour choisir quelles étapes sont à faire
-  * step 2 : récupération d'un dossier/travail déjà existant
-* Donner une liste de photos ou vidéos à traiter
-  * step 1 : pour chaque média, utiliser la même "face to change" et la même "face to add"
-  * step 2 : pour chaque média, utiliser des "face to change" et "face to add" spécifiques
-* Traiter plusieurs personnes en même temps
-  * avoir une liste de visages à traiter
-    * step 1 : liste fixe de 3 personnes max
-    * step 2 : liste de longueur indéfinie
+* ~~Refacto core.py, usine à gaz.~~
+* ~~Refacto ce readme~~
+* Refacto frame\core.py
+* Refacto face_swapper.py et face_enhancer.py pour avoir des objets plus génériques
+* Permettre de reprendre un travail en cours :
+  * step 1 : cases à cocher pour choisir quelles étapes sont à faire.
+  * step 2 : récupération d'un dossier/travail déjà existant.
+* Donner une liste de photos ou vidéos à traiter :
+  * step 1 : pour chaque média, utiliser la même "face to change" et la même "face to add".
+  * step 2 : pour chaque média, utiliser des "face to change" et "face to add" spécifiques.
+* Traiter plusieurs personnes en même temps :
+  * avoir une liste de visages à traiter :
+    * step 1 : liste fixe de 3 personnes max.
+    * step 2 : liste de longueur indéfinie.
+* En cas d'enhance, générer la vidéo sans enhance en parallèle pour avoir un aperçu.
 
 ### The Fast and Simple "roop-based*" FaceSwap application with a lot of improvements and with no forced NSFW** filter (uncensored, use it on your own responsibility)
 
@@ -65,7 +68,6 @@ Executing `python run.py` command will launch this window:
 * Start => select the output filepath and go
 * Preview => for videos, allow you to get snapshots of what it will look like
 * Debug matching scores => produces the media not faceswapped but with matching scores
-* 
 
 
 ## Credits
@@ -74,3 +76,4 @@ Executing `python run.py` command will launch this window:
 - [deepinsight](https://github.com/deepinsight): for their [insightface](https://github.com/deepinsight/insightface) project which provided a well-made library and models.
 - [Gourieff](https://github.com/Gourieff/ReActor-UI) for the previous version of ReActor-UI
 - and all developers behind libraries used in this project.
+- ETH credits : 0x54e028632dd2e9da8c15f1894a0ff97a1afa3d49

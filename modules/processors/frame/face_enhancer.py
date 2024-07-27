@@ -12,7 +12,8 @@ from modules.utilities import conditional_download, resolve_relative_path, is_im
 FACE_ENHANCER = None
 THREAD_SEMAPHORE = threading.Semaphore()
 THREAD_LOCK = threading.Lock()
-NAME = 'REACTOR.FACE-ENHANCER'
+SHORTNAME = "FACE-ENHANCER"
+NAME = f'REACTOR.{SHORTNAME}'
 
 
 def pre_check() -> bool:

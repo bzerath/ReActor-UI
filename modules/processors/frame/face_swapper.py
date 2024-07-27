@@ -14,7 +14,8 @@ from modules.utilities import conditional_download, resolve_relative_path, is_im
 
 FACE_SWAPPER = None
 THREAD_LOCK = threading.Lock()
-NAME = 'REACTOR.FACE-SWAPPER'
+SHORTNAME = "FACE-SWAPPER"
+NAME = f'REACTOR.{SHORTNAME}'
 
 
 def pre_check() -> bool:
