@@ -133,7 +133,7 @@ def process(process: Literal["process", "debug"]) -> None:
                    modules.variables.values.subject_path,
                    modules.variables.values.output_path)
             release_resources()
-        if is_image(modules.variables.values.target_path):
+        if is_image(modules.variables.values.output_path):
             update_status('Processing to image succeed!')
         else:
             update_status('Processing to image failed!')

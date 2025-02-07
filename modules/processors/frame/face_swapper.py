@@ -158,7 +158,10 @@ def debug_image(source_path: str, target_path: str, subject_path: str, output_pa
 
 
 def process_video(source_path: str, temp_frame_paths: List[str], subject_path: str) -> None:
-    modules.processors.frame.core.process_video(source_path, temp_frame_paths, process_frames, subject_path)
+    modules.processors.frame.core.process_video(source_path,
+                                                temp_frame_paths,
+                                                process_frames,
+                                                subject_path)
 
 
 def debug_video(source_path: str, temp_frame_paths: List[str], subject_path: str) -> None:
