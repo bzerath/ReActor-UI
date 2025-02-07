@@ -128,7 +128,7 @@ class App(ctk.CTk):
                                                 cursor='hand2',
                                                 command=lambda: setattr(values, 'keep_frames', self.keep_frames_value.get()))
         self.keep_frames_switch.place(relx=self.col01_x,
-                                      rely=0.45,
+                                      rely=0.43,
                                       relwidth=0.25,
                                       relheight=0.05)
         keep_frames_tip = Hovertip(self.keep_frames_switch,
@@ -185,7 +185,32 @@ class App(ctk.CTk):
                                     variable=nsfw_value,
                                     cursor='hand2',
                                     command=lambda: setattr(values, 'nsfw', nsfw_value.get()))
-        nsfw_switch.place(relx=self.col01_x, rely=0.52, relwidth=0.25, relheight=0.05)
+        nsfw_switch.place(relx=self.col01_x,
+                          rely=0.48,
+                          relwidth=0.25,
+                          relheight=0.05)
+
+        decompose_value = ctk.BooleanVar(value=values.decompose_video)
+        decompose_switch = ctk.CTkSwitch(self,
+                                         text='Decompose video',
+                                         variable=decompose_value,
+                                         cursor='hand2',
+                                         command=lambda: setattr(values, 'decompose_video', decompose_value.get()))
+        decompose_switch.place(relx=self.col01_x,
+                               rely=0.53,
+                               relwidth=0.25,
+                               relheight=0.05)
+
+        recompose_value = ctk.BooleanVar(value=values.recompose_video)
+        recompose_switch = ctk.CTkSwitch(self,
+                                         text='Recompose video',
+                                         variable=recompose_value,
+                                         cursor='hand2',
+                                         command=lambda: setattr(values, 'recompose_video', recompose_value.get()))
+        recompose_switch.place(relx=self.col01_x,
+                               rely=0.58,
+                               relwidth=0.25,
+                               relheight=0.05)
 
         self.distance_value = ctk.DoubleVar(value=values.distance_score)
         self.distance_label = ctk.CTkLabel(self, text="Minimum score limit :", anchor="w")

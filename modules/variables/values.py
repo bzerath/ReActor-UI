@@ -45,3 +45,5 @@ execution_threads = None
 log_level = 'info'
 fp_ui: Dict[str, bool] = {}
 nsfw = True
+decompose_video = True
+recompose_video = True

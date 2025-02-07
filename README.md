@@ -16,6 +16,7 @@
     * step 1 : liste fixe de 3 personnes max.
     * step 2 : liste de longueur indéfinie.
 * En cas d'enhance, générer la vidéo sans enhance en parallèle pour avoir un aperçu.
+* Faceswap "the best ones" : faceswap tous les visages, mais que ceux inférieurs au seuil
 
 ### The Fast and Simple "roop-based*" FaceSwap application with a lot of improvements and with no forced NSFW** filter (uncensored, use it on your own responsibility)
 

@@ -21,8 +21,14 @@ if platform.system().lower() == 'darwin':
 
 
 def run_ffmpeg(args: List[str]) -> bool:
-    commands = ['ffmpeg', '-hwaccel', 'd3d11va', '-loglevel', modules.variables.values.log_level]
+    print(modules.variables.values.execution_providers)
+    if 'CUDAExecutionProvider' in modules.variables.values.execution_providers:
+        execution_provider = "cuda"
+    else:
+        execution_provider = "d3d11va"
+    commands = ['ffmpeg', '-hwaccel', execution_provider, '-loglevel', modules.variables.values.log_level]
     commands.extend(args)
+    print(" ".join(commands))
     try:
         process = subprocess.Popen(commands,
                                    stdout=subprocess.PIPE,
@@ -66,7 +72,16 @@ def extract_frames(target_path: str) -> None:
 def create_unsound_video(target_path: str, fps: float) -> None:
     temp_output_path = get_temp_output_path(target_path)
     temp_directory_path = get_temp_directory_path(target_path)
-    run_ffmpeg(['-r', str(fps), '-i', os.path.join(temp_directory_path, '%04d.png'), '-c:v', modules.variables.values.video_encoder, '-crf', str(modules.variables.values.video_quality), '-pix_fmt', 'yuv420p', '-vf', 'colorspace=bt709:iall=bt601-6-625:fast=1', '-y', temp_output_path])
+    run_ffmpeg(['-r', str(fps),
+                '-i', os.path.join(temp_directory_path, '%04d.png'),
+                '-c:v', modules.variables.values.video_encoder,
+                '-crf', str(modules.variables.values.video_quality),
+                '-pix_fmt',
+                'yuv420p',
+                '-vf',
+                'colorspace=bt709:iall=bt601-6-625:fast=1',
+                '-y',
+                temp_output_path])
 
 
 def restore_audio(target_path: str, output_path: str) -> None:

@@ -143,10 +143,15 @@ def process(process: Literal["process", "debug"]) -> None:
         from modules.predicter import predict_video
         if predict_video(modules.variables.values.target_path):
             destroy()
-    update_status('Creating temp resources...')
-    create_temp(modules.variables.values.target_path)
-    update_status('Extracting frames...')
-    extract_frames(modules.variables.values.target_path)
+
+    if modules.variables.values.decompose_video:
+        update_status('Creating temp resources...')
+        create_temp(modules.variables.values.target_path)
+        update_status('Extracting frames...')
+        extract_frames(modules.variables.values.target_path)
+    else:
+        update_status('Keeping frames existing.')
+
     temp_frame_paths = get_temp_frame_paths(modules.variables.values.target_path)
     for frame_processor in get_frame_processors_modules(modules.variables.values.frame_processors):
         update_status('Progressing... source_path={}'.format(modules.variables.values.source_path),
@@ -158,8 +163,12 @@ def process(process: Literal["process", "debug"]) -> None:
         release_resources()
 
     update_status(f'Creating video...')
-    utilities.create_video(target_path=modules.variables.values.target_path,
-                           output_path=modules.variables.values.output_path)
+
+    if modules.variables.values.recompose_video:
+        utilities.create_video(target_path=modules.variables.values.target_path,
+                               output_path=modules.variables.values.output_path)
+    else:
+        update_status("Not recomposing video.")
     # clean and validate
     clean_temp(modules.variables.values.target_path)
     if is_video(modules.variables.values.target_path):
