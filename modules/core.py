@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 # single thread doubles cuda performance - needs to be set before torch import
 if any(arg.startswith('--execution-provider') for arg in sys.argv):
@@ -94,6 +95,7 @@ def limit_resources() -> None:
 
 def release_resources() -> None:
     if 'CUDAExecutionProvider' in modules.variables.values.execution_providers:
+        print(torch.cuda.is_initialized())
         torch.cuda.empty_cache()
 
 
@@ -133,6 +135,7 @@ def process(process: Literal["process", "debug"]) -> None:
                    modules.variables.values.subject_path,
                    modules.variables.values.output_path)
             release_resources()
+        clean_temp(modules.variables.values.target_path)
         if is_image(modules.variables.values.output_path):
             update_status('Processing to image succeed!')
         else:

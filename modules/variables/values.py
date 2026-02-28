@@ -30,6 +30,11 @@ faces_options = [faces_best_one,
                  faces_none]
 face_option: str = faces_none
 
+option_best_one = "Best face only"
+option_all_faces = "All faces"
+option_all = "All frame"
+option_none = "None"
+
 source_path = None
 subject_path = None
 target_path = None

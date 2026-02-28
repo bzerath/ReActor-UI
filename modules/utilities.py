@@ -142,6 +142,8 @@ def clean_temp(target_path: str) -> None:
         shutil.rmtree(temp_directory_path)
     if os.path.exists(parent_directory_path) and not os.listdir(parent_directory_path):
         os.rmdir(parent_directory_path)
+    if not modules.variables.values.keep_frames and is_image(target_path):
+        os.remove(target_path)
 
 
 def has_image_extension(image_path: str) -> bool:

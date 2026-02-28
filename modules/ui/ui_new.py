@@ -1,4 +1,5 @@
 import os
+os.add_dll_directory("C:\\Program Files\\NVIDIA\\CUDNN\\v9.7\\bin\\12.8")
 import webbrowser
 from typing import Tuple, Callable
 
@@ -339,15 +340,15 @@ class App(ctk.CTk):
             output_path = ctk.filedialog.asksaveasfilename(title='save image output file',
                                                            filetypes=[self.file_types[0]],
                                                            defaultextension='.png',
-                                                           initialfile=os.path.splitext(os.path.basename(values.target_path))[0]+"_output.png"
-                                                           if values.target_path else 'output.png',
+                                                           initialfile=f"{os.path.splitext(os.path.basename(values.target_path))[0]}_{os.path.splitext(os.path.basename(values.source_path))[0]}_output.png"
+                                                           if values.subject_path else 'output.png',
                                                            initialdir=self.RECENT_DIRECTORY_OUTPUT)
         elif modules.utilities.is_video(values.target_path):
             output_path = ctk.filedialog.asksaveasfilename(title='save video output file',
                                                            filetypes=[self.file_types[1]],
                                                            defaultextension='.mp4',
-                                                           initialfile=os.path.splitext(os.path.basename(values.target_path))[0]+"_output.mp4"
-                                                           if values.target_path else 'output.mp4',
+                                                           initialfile=f"{os.path.splitext(os.path.basename(values.target_path))[0]}_{os.path.splitext(os.path.basename(values.source_path))[0]}_output.mp4"
+                                                           if values.subject_path else 'output.mp4',
                                                            initialdir=self.RECENT_DIRECTORY_OUTPUT)
         else:
             output_path = None
